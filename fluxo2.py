@@ -2,11 +2,12 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 from sklearn.linear_model import LinearRegression
+import statsmodels.api as sm
 from statsmodels.tsa.holtwinters import ExponentialSmoothing
 import plotly.graph_objects as go
 import calendar
 from plotly.subplots import make_subplots
-
+#codigo em java h1até h6 mexe no tamanho do titulo
 st.markdown("<h6 style='text-align: center; color: black;'>Previsão de Faturamento e Quantidade de Vendas</h3>", unsafe_allow_html=True)
 
 # Evita warnings no output do Streamlit
@@ -39,7 +40,7 @@ forecast_date_rng = pd.date_range(start=forecast_start_date, end=forecast_end_da
 
 # Criar um DataFrame para armazenar as previsões dos próximos 13 meses
 forecast_df = pd.DataFrame(forecast_date_rng, columns=['date'])
-
+'''
 # Criar o modelo de regressão
 model = LinearRegression()
 
@@ -50,7 +51,18 @@ model.fit(X, y)
 
 # Fazer a previsão para os próximos 13 meses
 forecast_X = np.arange(len(df), len(df) + len(forecast_df)).reshape(-1, 1)
-forecast_y = model.predict(forecast_X)
+forecast_y = model.predict(forecast_X)'''
+# Criar o modelo de regressão
+X = sm.add_constant(df.index.values)  # Adicionando uma constante (intercepto) para o modelo OLS
+y = df['faturamento_mensal'].values
+model = sm.OLS(y, X)
+
+# Ajustar o modelo de regressão com os dados históricos
+results = model.fit()
+
+# Fazer a previsão para os próximos 13 meses
+forecast_X = sm.add_constant(np.arange(len(df), len(df) + len(forecast_df)))  # Não se esqueça de adicionar a constante para as previsões também
+forecast_y = results.predict(forecast_X)
 
 # Garantir que não haja valores negativos nas previsões
 forecast_y = np.maximum(forecast_y, 0)
@@ -91,12 +103,14 @@ forecast = model_fit.predict(start=pd.to_datetime('2023-09-01'), end=pd.to_datet
 ###############################################################################
 # Criando uma figura com Plotly
 
-# Seu código continua aqui, até a parte de criar a figura com Plotly.
+# plot com Ploty e configuração 
 
 import plotly.graph_objs as go
 from plotly.subplots import make_subplots
 
 # Cria a figura para 'Quantidade de Vendas do Mês'
+#parte de update_layout olhar na documentaçã odo ploty
+
 fig1 = go.Figure()
 fig1.add_trace(go.Scatter(x=df.index, y=df['Quantidade de Vendas do Mês'], mode='lines', name='Dados Originais'))
 fig1.add_trace(go.Scatter(x=forecast.index, y=forecast, mode='lines', name='Previsões', line=dict(dash='dash')))
@@ -134,6 +148,7 @@ fig.update_layout(height=600, width=800, title_text="Previsões",
                               bgcolor="LightSteelBlue", bordercolor="Black", borderwidth=2))
 
 # Adiciona um seletor no sidebar com "Ambos" como padrão
+#sidebar adiciona caixa ao lado esquerdo da pagina verificar se da para mudar depois
 option = st.sidebar.selectbox(
     'Qual gráfico você quer mostrar?',
     ('Ambos', 'Gráfico de Faturamento', 'Gráfico de Vendas'))

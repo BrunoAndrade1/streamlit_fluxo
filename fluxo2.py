@@ -1,8 +1,7 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-#from sklearn.linear_model import LinearRegression
-import statsmodels.api as sm
+from sklearn.linear_model import LinearRegression
 from statsmodels.tsa.holtwinters import ExponentialSmoothing
 import plotly.graph_objects as go
 import calendar
@@ -40,7 +39,7 @@ forecast_date_rng = pd.date_range(start=forecast_start_date, end=forecast_end_da
 
 # Criar um DataFrame para armazenar as previsões dos próximos 13 meses
 forecast_df = pd.DataFrame(forecast_date_rng, columns=['date'])
-'''
+
 # Criar o modelo de regressão
 model = LinearRegression()
 
@@ -51,18 +50,7 @@ model.fit(X, y)
 
 # Fazer a previsão para os próximos 13 meses
 forecast_X = np.arange(len(df), len(df) + len(forecast_df)).reshape(-1, 1)
-forecast_y = model.predict(forecast_X)'''
-# Criar o modelo de regressão
-X = sm.add_constant(df.index.values)  # Adicionando uma constante (intercepto) para o modelo OLS
-y = df['faturamento_mensal'].values
-model = sm.OLS(y, X)
-
-# Ajustar o modelo de regressão com os dados históricos
-results = model.fit()
-
-# Fazer a previsão para os próximos 13 meses
-forecast_X = sm.add_constant(np.arange(len(df), len(df) + len(forecast_df)))  # Não se esqueça de adicionar a constante para as previsões também
-forecast_y = results.predict(forecast_X)
+forecast_y = model.predict(forecast_X)
 
 # Garantir que não haja valores negativos nas previsões
 forecast_y = np.maximum(forecast_y, 0)
